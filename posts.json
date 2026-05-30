@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "id": "mpsc0r9fr9ha4",
+    "title": "testing",
+    "badge": "breaking",
+    "category": "test",
+    "byline": "test",
+    "timestamp": 1780144412163,
+    "published": true,
+    "featured": true,
+    "blocks": [
+      {
+        "id": "mpsbzmql9t9rm",
+        "type": "kick",
+        "clipUrl": "https://kick.com/sam/clips/clip_01KSQWRM96KZ2RZN113H3FAG0K?t=",
+        "clipSlug": "clip_01KSQWRM96KZ2RZN113H3FAG0K"
+      }
+    ]
+  }
+]
