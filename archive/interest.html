@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Express Interest | International Kick Streamers Union</title>
+  <meta name="description" content="Are you a Kick creator? Connect your Kick account and express your interest in forming an official union." />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <script src="config.js"></script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="index.html">
+    <img src="logo.png" alt="IKSU Logo" />
+    <span>IKSU</span>
+  </a>
+  <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+  <ul class="nav-links">
+    <li><a href="index.html#about">About</a></li>
+    <li><a href="index.html#statement">Our Demands</a></li>
+    <li><a href="index.html#benefits">Benefits</a></li>
+    <li><a href="supporters.html">Who's Interested</a></li>
+    <li><a href="interest.html" class="nav-cta">Express Interest</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="petition-hero" style="background:var(--bg-card);border-bottom:1px solid var(--border);">
+  <img src="logo.png" alt="IKSU Logo" style="width:110px;height:110px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(83,252,24,0.35));margin-bottom:1.25rem;" />
+  <p class="hero-eyebrow">Expression of Interest</p>
+  <h1 style="font-family:'Oswald',sans-serif;font-size:clamp(1.8rem,4vw,3rem);text-transform:uppercase;font-weight:700;letter-spacing:0.04em;margin-bottom:0.75rem;line-height:1.1;">
+    Are You <em style="font-style:normal;color:var(--green);">In?</em>
+  </h1>
+  <p style="color:var(--text-muted);max-width:560px;margin:0 auto;font-size:1rem;line-height:1.65;">
+    Connect your Kick account to verify you're a real creator and add your name to the list
+    of people who want to see an official Kick Streamers Union formed.
+  </p>
+</div>
+
+<!-- CONFIG WARNING -->
+<div id="configWarning" class="config-warning" style="display:none;margin:1.5rem auto;max-width:1100px;padding:0 1.5rem;">
+  <strong>&#9888; Setup required:</strong> Open <code>config.js</code> and fill in your
+  Supabase credentials and Kick OAuth Client ID. See the comments in that file for step-by-step instructions.
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="petition-layout">
+
+  <!-- LEFT: INFO -->
+  <div class="petition-info">
+    <h2>What This Is</h2>
+    <p>
+      This is an <strong>expression of interest</strong> — not a binding commitment. We are trying
+      to establish how much support exists among Kick creators for forming an official union.
+    </p>
+    <p>
+      If we gather enough interest from the creator community, we will move forward with formally
+      establishing the IKSU, electing creator representatives, and opening negotiations with Kick.
+    </p>
+    <p>
+      Your Kick account is authenticated directly through Kick's own login system —
+      the same way you log in to Kick itself. Your username, profile picture, and a link
+      to your channel will be shown publicly on the
+      <a href="supporters.html" style="color:var(--green);">Who's Interested</a> page.
+    </p>
+
+    <h2 style="margin-top:2rem;">What Happens Next</h2>
+    <ul style="color:var(--text-muted);font-size:0.95rem;line-height:2;padding-left:1.2rem;margin-bottom:1.5rem;">
+      <li>You log in via Kick — your identity is verified by Kick directly</li>
+      <li>Your profile appears publicly on the supporters page</li>
+      <li>If sufficient creator interest is demonstrated, we formally establish the union</li>
+      <li>Founding members get first voice in electing representatives</li>
+      <li>The union enters negotiation with Kick on KPP, ad revenue, and creator rights</li>
+    </ul>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:4px;padding:1.25rem 1.5rem;margin-top:1.5rem;">
+      <p style="font-size:0.9rem;color:var(--text-muted);line-height:1.65;margin:0;">
+        <strong style="color:var(--text);">No dues. No obligations.</strong> Expressing interest costs
+        you nothing and commits you to nothing at this stage. It is simply a public statement that
+        you support the idea of creator representation on Kick.
+      </p>
+    </div>
+
+    <!-- Live count pulled from Supabase -->
+    <div class="signers-bar" style="margin-top:2rem;">
+      <h3>Creators Interested So Far</h3>
+      <div class="signers-count" id="liveCount">—</div>
+      <p class="signers-label">verified Kick creators</p>
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem;">
+        <a href="supporters.html" style="color:var(--green);">View all &rarr;</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- RIGHT: CARD -->
+  <div>
+    <div class="form-card">
+
+      <!-- STATE A: Connect button (default) -->
+      <div id="stateConnect">
+        <h2>Connect Your Kick Account</h2>
+        <p class="form-sub">You'll be taken to Kick to log in. We only read your public profile.</p>
+
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:1.25rem;margin-bottom:1.5rem;">
+          <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.65;margin:0;">
+            Clicking the button below redirects you to <strong style="color:var(--text);">Kick's official login page</strong>.
+            We request read-only access to your public profile — we never see your password
+            and cannot post or modify anything on your account.
+          </p>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-submit" id="connectBtn" onclick="startOAuth()">
+          <span id="connectBtnText">Connect with Kick &#8594;</span>
+        </button>
+
+        <p id="oauthError" style="color:#ff5c5c;font-size:0.82rem;margin-top:0.75rem;display:none;line-height:1.5;"></p>
+      </div>
+
+
+      <!-- STATE B: Enter channel name after OAuth verified -->
+      <div id="stateUsername" style="display:none;">
+        <h2>One Last Step</h2>
+        <p class="form-sub">Your Kick account is verified. Enter your exact channel name and click Proceed.</p>
+
+        <div style="background:rgba(83,252,24,0.06);border:1px solid rgba(83,252,24,0.2);border-radius:6px;padding:0.85rem 1rem;margin-bottom:1.25rem;">
+          <p style="font-size:0.82rem;color:var(--green);margin:0;">&#10003; Authenticated via Kick</p>
+        </div>
+
+        <div class="form-group">
+          <label for="kickSlugInput">Your Kick Channel Name</label>
+          <input type="text" id="kickSlugInput" placeholder="e.g. yourchannelname" autocomplete="off" spellcheck="false" style="width:100%;"
+            oninput="document.getElementById('lookupError').style.display='none';"
+            onkeydown="if(event.key==='Enter') proceedToVerify();" />
+          <p id="lookupError" style="color:#ff5c5c;font-size:0.82rem;margin-top:0.5rem;display:none;"></p>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-submit" id="lookupBtn" onclick="proceedToVerify()">
+          Proceed &#8594;
+        </button>
+        <p id="lookupSpinner" style="color:var(--text-muted);font-size:0.82rem;margin-top:0.75rem;display:none;">Looking up channel…</p>
+      </div>
+
+      <!-- STATE C: Verify + submit -->
+      <div id="stateVerify" style="display:none;">
+        <h2>Verify &amp; Register</h2>
+        <p class="form-sub">Type the 6-digit code in your Kick chat, then click Verify.</p>
+
+        <!-- Profile card -->
+        <div class="kick-profile-preview" id="verifyProfile" style="margin-bottom:1.25rem;">
+          <img id="verifyAvatar" src="" alt="" />
+          <div class="preview-info">
+            <div id="verifyName" class="preview-name"></div>
+            <div id="verifySlug" class="preview-slug"></div>
+            <div id="verifyFollowers" class="preview-followers"></div>
+          </div>
+        </div>
+
+        <p style="font-size:0.82rem;color:var(--text-muted);margin:-0.5rem 0 1.25rem;">
+          Not you?
+          <button onclick="stopVerification(); showState('stateUsername');" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:0.82rem;padding:0;text-decoration:underline;">Try a different channel</button>
+        </p>
+
+        <!-- Code box -->
+        <div style="background:rgba(83,252,24,0.06);border:1px solid rgba(83,252,24,0.25);border-radius:6px;padding:1rem 1.25rem;margin-bottom:1.25rem;text-align:center;">
+          <p style="font-size:0.78rem;color:var(--text-muted);margin:0 0 0.5rem;">Type this code in your Kick chat</p>
+          <div id="verifyCodeDisplay" style="font-family:monospace;font-size:1.8rem;font-weight:700;color:var(--green);letter-spacing:0.18em;cursor:pointer;" onclick="copyCode()" title="Click to copy"></div>
+          <p style="font-size:0.72rem;color:var(--text-muted);margin:0.4rem 0 0;">Click to copy &nbsp;&bull;&nbsp; <a id="kickChatLink" href="#" target="_blank" rel="noopener" style="color:var(--green);">Open your chat &#8599;</a></p>
+        </div>
+
+        <!-- Consent -->
+        <div class="checkbox-group" style="margin-bottom:1.25rem;">
+          <input type="checkbox" id="confirmPublic" onchange="updateVerifyBtn()" />
+          <label for="confirmPublic">
+            I confirm this is my Kick channel and I consent to my username, profile picture,
+            and channel link being displayed publicly on the IKSU supporters page.
+          </label>
+        </div>
+
+        <!-- Status / error -->
+        <p id="verifyStatus" style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.75rem;display:none;">Saving…</p>
+        <p id="verifyError" style="color:#ff5c5c;font-size:0.82rem;margin-bottom:0.75rem;display:none;line-height:1.5;"></p>
+
+        <button type="button" class="btn btn-primary btn-submit" id="verifyBtn" onclick="verifyAndSubmit()" disabled>
+          Verify &#8594;
+        </button>
+      </div>
+
+      <!-- STATE C: Success -->
+      <div class="success-msg" id="stateSuccess">
+        <div class="check">&#9989;</div>
+        <h3>You're On the List!</h3>
+        <p>Your Kick account has been verified and your interest recorded. You now appear on the supporters page.</p>
+        <div style="display:flex;gap:0.75rem;justify-content:center;margin-top:1rem;flex-wrap:wrap;">
+          <a href="supporters.html" class="btn btn-primary" style="font-size:0.85rem;padding:0.6rem 1.25rem;">
+            See the Supporters
+          </a>
+        </div>
+      </div>
+
+      <!-- STATE D: Already registered -->
+      <div class="success-msg" id="stateAlready" style="background:rgba(83,252,24,0.05);">
+        <div class="check">&#9989;</div>
+        <h3>Already Registered</h3>
+        <p>This Kick account has already expressed interest — you're already on the list.</p>
+        <div style="display:flex;gap:0.75rem;justify-content:center;margin-top:1rem;">
+          <a href="supporters.html" class="btn btn-outline" style="font-size:0.85rem;padding:0.6rem 1.25rem;">
+            View Supporters
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <img class="footer-logo" src="logo.png" alt="IKSU" />
+    <p class="footer-tagline">We Stream Together &mdash; We Rise</p>
+    <p>
+      International Kick Streamers Union of Kick Streamers and Creators &mdash;
+      An independent, creator-led organisation. Not affiliated with Kick.com.
+    </p>
+    <p style="margin-top:0.75rem;">
+      <a href="index.html">Home</a> &nbsp;|&nbsp;
+      <a href="interest.html">Express Interest</a> &nbsp;|&nbsp;
+      <a href="supporters.html">Who's Interested</a> &nbsp;|&nbsp;
+      <a href="index.html#about">About</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+// ── Config check ──────────────────────────────────────────────────────────────
+function isConfigured() {
+  return typeof SUPABASE_URL          !== 'undefined' && SUPABASE_URL          !== 'YOUR_SUPABASE_URL_HERE'
+      && typeof SUPABASE_ANON_KEY     !== 'undefined' && SUPABASE_ANON_KEY     !== 'YOUR_SUPABASE_ANON_KEY_HERE'
+      && typeof KICK_CLIENT_ID        !== 'undefined' && KICK_CLIENT_ID        !== 'YOUR_KICK_CLIENT_ID_HERE'
+      && typeof KICK_REDIRECT_URI     !== 'undefined' && KICK_REDIRECT_URI     !== 'YOUR_REDIRECT_URI_HERE'
+      && typeof KICK_TOKEN_WORKER_URL !== 'undefined' && KICK_TOKEN_WORKER_URL !== 'YOUR_WORKER_URL_HERE';
+}
+
+// ── Supabase REST helpers (no library needed) ─────────────────────────────────
+function sbHeaders() {
+  return {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+    'Content-Type': 'application/json',
+  };
+}
+
+async function loadCount() {
+  if (!isConfigured()) return;
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/expressions_of_interest?select=id', {
+      headers: Object.assign({}, sbHeaders(), { 'Prefer': 'count=exact', 'Range': '0-0' }),
+    });
+    const range = res.headers.get('content-range');
+    const total = range ? range.split('/')[1] : null;
+    const el = document.getElementById('liveCount');
+    if (el) el.textContent = total != null ? parseInt(total, 10).toLocaleString() : '0';
+  } catch (e) {}
+}
+
+// ── PKCE helpers ──────────────────────────────────────────────────────────────
+function randomString(len) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+  const arr = new Uint8Array(len);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => chars[b % chars.length]).join('');
+}
+
+async function sha256base64url(plain) {
+  const data = new TextEncoder().encode(plain);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+// ── Start OAuth flow ──────────────────────────────────────────────────────────
+async function startOAuth() {
+  if (!isConfigured()) {
+    document.getElementById('configWarning').style.display = 'block';
+    document.getElementById('oauthError').textContent =
+      'The site is not yet configured. Fill in config.js first.';
+    document.getElementById('oauthError').style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('connectBtn');
+  document.getElementById('connectBtnText').textContent = 'Redirecting to Kick…';
+  btn.disabled = true;
+
+  // Generate PKCE pair
+  const verifier  = randomString(64);
+  const challenge = await sha256base64url(verifier);
+  const state     = randomString(16);
+
+  sessionStorage.setItem('kick_pkce_verifier', verifier);
+  sessionStorage.setItem('kick_oauth_state',   state);
+
+  const url = new URL('https://id.kick.com/oauth/authorize');
+  url.searchParams.set('client_id',             KICK_CLIENT_ID);
+  url.searchParams.set('redirect_uri',          KICK_REDIRECT_URI);
+  url.searchParams.set('response_type',         'code');
+  url.searchParams.set('scope',                 'openid user:read channel:read');
+  url.searchParams.set('code_challenge',        challenge);
+  url.searchParams.set('code_challenge_method', 'S256');
+  url.searchParams.set('state',                 state);
+
+  window.location.href = url.toString();
+}
+
+// ── Handle return from OAuth ──────────────────────────────────────────────────
+function handleOAuthReturn() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('auth') !== 'verified') return false;
+  history.replaceState(null, '', 'interest.html');
+
+  if (sessionStorage.getItem('kick_oauth_verified') !== 'true') {
+    showOAuthError('Session data was lost. Please try connecting again.');
+    return true;
+  }
+
+  sessionStorage.removeItem('kick_oauth_verified');
+  sessionStorage.removeItem('kick_profile');
+  sessionStorage.removeItem('iksu_debug');
+
+  stopVerification();
+  document.getElementById('kickSlugInput').value = '';
+  document.getElementById('lookupError').style.display = 'none';
+  showState('stateUsername');
+  return true;
+}
+
+function showOAuthError(msg) {
+  document.getElementById('oauthError').textContent = msg;
+  document.getElementById('oauthError').style.display = 'block';
+}
+
+
+// ── Channel lookup triggered by Proceed button ───────────────────────────────
+let _lookupSeq = 0;
+
+function proceedToVerify() {
+  const input   = document.getElementById('kickSlugInput');
+  const errEl   = document.getElementById('lookupError');
+  const spinner = document.getElementById('lookupSpinner');
+  const btn     = document.getElementById('lookupBtn');
+  errEl.style.display = 'none';
+  const slug = input.value.trim().replace(/^@/, '').toLowerCase();
+  if (!slug) {
+    errEl.textContent   = 'Please enter your Kick channel name.';
+    errEl.style.display = 'block';
+    return;
+  }
+  btn.disabled          = true;
+  btn.textContent       = 'Looking up…';
+  spinner.style.display = 'block';
+  lookupChannel(slug).finally(function() {
+    btn.disabled    = false;
+    btn.textContent = 'Proceed →';
+    spinner.style.display = 'none';
+  });
+}
+
+async function lookupChannel(slug) {
+  const seq   = ++_lookupSeq;
+  const errEl = document.getElementById('lookupError');
+
+  let channel;
+  try {
+    const res  = await fetch(KICK_TOKEN_WORKER_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ type: 'channel', slug }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.slug) throw new Error('not found');
+    channel = data;
+  } catch (e) {
+    if (seq !== _lookupSeq) return;
+    errEl.textContent   = 'Channel not found — check the spelling and try again.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  if (seq !== _lookupSeq) return;
+
+  const name = (channel.user && channel.user.username) ? channel.user.username : channel.slug;
+  const pic  = (channel.user && channel.user.profile_pic) ? channel.user.profile_pic
+    : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=1a1a1a&color=53fc18&size=80';
+
+  window._verifiedProfile = {
+    id:          String((channel.user && channel.user.id) ? channel.user.id : channel.id || channel.slug),
+    username:    channel.slug,
+    displayName: name,
+    profilePic:  pic,
+    slug:        channel.slug,
+    followers:   channel.followers_count || 0,
+    chatroomId:  channel.chatroom ? channel.chatroom.id : null,
+    ownerId:     channel.user ? String(channel.user.id) : null,
+  };
+
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  sessionStorage.setItem('iksu_verify_code', code);
+
+  document.getElementById('verifyAvatar').src          = pic;
+  document.getElementById('verifyName').textContent     = name;
+  document.getElementById('verifySlug').textContent     = '@' + channel.slug;
+  document.getElementById('verifyFollowers').textContent = channel.followers_count
+    ? channel.followers_count.toLocaleString() + ' followers' : '';
+  document.getElementById('verifyCodeDisplay').textContent = code;
+  document.getElementById('kickChatLink').href             = 'https://kick.com/' + channel.slug;
+  document.getElementById('confirmPublic').checked         = false;
+  document.getElementById('verifyError').style.display     = 'none';
+  document.getElementById('verifyStatus').style.display    = 'none';
+
+  stopVerification();
+  showState('stateVerify');
+  startListening(code);
+}
+
+// ── Chat verification via Kick's Pusher WebSocket ────────────────────────────
+let _ws            = null;
+let _wsTimeout     = null;
+let _codeReceived  = false;
+
+function copyCode() {
+  const code = document.getElementById('verifyCodeDisplay').textContent;
+  if (navigator.clipboard) navigator.clipboard.writeText(code);
+}
+
+function stopVerification() {
+  clearTimeout(_wsTimeout);
+  if (_ws) { try { _ws.close(); } catch(e) {} _ws = null; }
+  _codeReceived = false;
+}
+
+
+function updateVerifyBtn() {
+  const ready = _codeReceived && document.getElementById('confirmPublic').checked;
+  document.getElementById('verifyBtn').disabled = !ready;
+}
+
+function startListening(code) {
+  stopVerification();
+  _codeReceived = false;
+  updateVerifyBtn();
+  const profile = window._verifiedProfile;
+
+  if (!profile || !profile.chatroomId) return;
+
+  const wsUrl = 'wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679'
+    + '?protocol=7&client=js&version=8.4.0-rc2&flash=false';
+
+  _ws = new WebSocket(wsUrl);
+
+  _ws.onopen = function() {
+    _ws.send(JSON.stringify({
+      event: 'pusher:subscribe',
+      data:  { auth: '', channel: 'chatrooms.' + profile.chatroomId + '.v2' },
+    }));
+  };
+
+  _ws.onmessage = function(evt) {
+    try {
+      const msg = JSON.parse(evt.data);
+      if (msg.event !== 'App\\Events\\ChatMessageEvent') return;
+      const data     = typeof msg.data === 'string' ? JSON.parse(msg.data) : msg.data;
+      const content  = data.content || '';
+      const senderId = data.sender  ? String(data.sender.id) : null;
+      if (content.indexOf(code) !== -1 && senderId === profile.ownerId) {
+        _codeReceived = true;
+        updateVerifyBtn();
+      }
+    } catch(e) {}
+  };
+
+  _ws.onerror = function() {};
+  _ws.onclose = function() {};
+
+  _wsTimeout = setTimeout(function() {
+    stopVerification();
+  }, 5 * 60 * 1000);
+}
+
+// ── Verify button handler ─────────────────────────────────────────────────────
+async function verifyAndSubmit() {
+  const errEl  = document.getElementById('verifyError');
+  const status = document.getElementById('verifyStatus');
+  const btn    = document.getElementById('verifyBtn');
+
+  errEl.style.display   = 'none';
+  status.style.display  = 'none';
+
+  if (!document.getElementById('confirmPublic').checked || !_codeReceived) return;
+
+  stopVerification();
+  sessionStorage.removeItem('iksu_verify_code');
+
+  btn.textContent = 'Saving…';
+  btn.disabled    = true;
+  status.textContent   = 'Verified! Saving your interest…';
+  status.style.display = 'block';
+
+  const profile = window._verifiedProfile;
+  const payload = {
+    kick_user_id:      profile.id,
+    kick_username:     profile.username,
+    kick_display_name: profile.displayName,
+    kick_profile_pic:  profile.profilePic,
+    follower_count:    parseInt(profile.followers, 10) || 0,
+  };
+
+  let res, body;
+  try {
+    res  = await fetch(SUPABASE_URL + '/rest/v1/expressions_of_interest', {
+      method:  'POST',
+      headers: Object.assign({}, sbHeaders(), { 'Prefer': 'return=representation' }),
+      body:    JSON.stringify(payload),
+    });
+    body = await res.text();
+  } catch(e) {
+    btn.textContent      = 'Verify →';
+    btn.disabled         = false;
+    status.style.display = 'none';
+    errEl.textContent    = 'Network error: ' + e.message;
+    errEl.style.display  = 'block';
+    return;
+  }
+
+  if (!res.ok) {
+    btn.textContent      = 'Verify →';
+    btn.disabled         = false;
+    status.style.display = 'none';
+    try {
+      const err = JSON.parse(body);
+      if (err.code === '23505') { showState('stateAlready'); return; }
+      errEl.textContent = 'Something went wrong: ' + (err.message || body);
+    } catch(e) {
+      errEl.textContent = 'Something went wrong (' + res.status + ')';
+    }
+    errEl.style.display = 'block';
+    return;
+  }
+
+  showState('stateSuccess');
+  loadCount();
+}
+
+// ── Submit to Supabase ────────────────────────────────────────────────────────
+
+// ── Show a single state panel ─────────────────────────────────────────────────
+function showState(id) {
+  ['stateConnect','stateUsername','stateVerify','stateSuccess','stateAlready'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+if (!isConfigured()) {
+  document.getElementById('configWarning').style.display = 'block';
+}
+
+loadCount();
+
+if (!handleOAuthReturn()) {
+  showState('stateConnect');
+}
+</script>
+
+</body>
+</html>

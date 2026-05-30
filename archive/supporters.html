@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Who's Interested | International Kick Streamers Union</title>
+  <meta name="description" content="Kick creators who have expressed interest in forming an official union." />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <script src="config.js"></script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="index.html">
+    <img src="logo.png" alt="IKSU Logo" />
+    <span>IKSU</span>
+  </a>
+  <button class="nav-toggle" aria-label="Toggle menu" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+  <ul class="nav-links">
+    <li><a href="index.html#about">About</a></li>
+    <li><a href="index.html#statement">Our Demands</a></li>
+    <li><a href="index.html#benefits">Benefits</a></li>
+    <li><a href="supporters.html">Who's Interested</a></li>
+    <li><a href="interest.html" class="nav-cta">Express Interest</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="petition-hero" style="background:var(--bg-card);border-bottom:1px solid var(--border);">
+  <img src="logo.png" alt="IKSU Logo" style="width:110px;height:110px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(83,252,24,0.35));margin-bottom:1.25rem;" />
+  <p class="hero-eyebrow">Expressions of Interest</p>
+  <h1 style="font-family:'Oswald',sans-serif;font-size:clamp(1.8rem,4vw,3rem);text-transform:uppercase;font-weight:700;letter-spacing:0.04em;margin-bottom:0.75rem;line-height:1.1;">
+    Creators <em style="font-style:normal;color:var(--green);">Standing Together</em>
+  </h1>
+  <p style="color:var(--text-muted);max-width:560px;margin:0 auto 1.5rem;font-size:1rem;line-height:1.65;">
+    These are verified Kick creators who have publicly expressed interest in forming an official union.
+    Every account below has been confirmed against the Kick platform.
+  </p>
+
+  <!-- Live stats bar -->
+  <div class="stats-strip">
+    <div class="stat-item">
+      <span class="stat-num" id="totalCount">—</span>
+      <span class="stat-label">Interested Creators</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <span class="stat-num" id="totalFollowers">—</span>
+      <span class="stat-label">Combined Followers</span>
+    </div>
+  </div>
+
+  <div style="margin-top:1.5rem;">
+    <a href="interest.html" class="btn btn-primary">Add Your Name</a>
+  </div>
+</div>
+
+<!-- SUPPORTERS GRID -->
+<section style="padding:3rem 1.5rem 5rem;">
+  <div class="section-inner">
+
+    <!-- Loading state -->
+    <div id="loadingState" style="text-align:center;padding:4rem 0;color:var(--text-muted);">
+      <div class="spinner"></div>
+      <p style="margin-top:1rem;">Loading creators…</p>
+    </div>
+
+    <!-- Config warning -->
+    <div id="configWarning" class="config-warning" style="display:none;">
+      <strong>&#9888; Setup required:</strong> Open <code>config.js</code> and add your Supabase credentials to see the supporters list.
+    </div>
+
+    <!-- Empty state -->
+    <div id="emptyState" style="display:none;text-align:center;padding:4rem 0;">
+      <div style="font-size:3rem;margin-bottom:1rem;">🎙️</div>
+      <h3 style="font-family:'Oswald',sans-serif;font-size:1.4rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem;">
+        Be the First
+      </h3>
+      <p style="color:var(--text-muted);max-width:400px;margin:0 auto 1.5rem;">
+        No creators have expressed interest yet. Be a founding voice — your name could be first on this list.
+      </p>
+      <a href="interest.html" class="btn btn-primary">Express Interest</a>
+    </div>
+
+    <!-- Grid -->
+    <div id="supportersGrid" class="supporters-grid" style="display:none;"></div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <img class="footer-logo" src="logo.png" alt="IKSU" />
+    <p class="footer-tagline">We Stream Together &mdash; We Rise</p>
+    <p>
+      International Kick Streamers Union of Kick Streamers and Creators &mdash;
+      An independent, creator-led organisation. Not affiliated with Kick.com.
+    </p>
+    <p style="margin-top:0.75rem;">
+      <a href="index.html">Home</a> &nbsp;|&nbsp;
+      <a href="interest.html">Express Interest</a> &nbsp;|&nbsp;
+      <a href="supporters.html">Who's Interested</a> &nbsp;|&nbsp;
+      <a href="index.html#about">About</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+  function sbHeaders() {
+    return {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+    };
+  }
+
+  function formatFollowers(n) {
+    if (!n) return '';
+    if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1000)    return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return n.toLocaleString();
+  }
+
+  function buildCard(creator) {
+    const slug     = creator.kick_username;
+    const name     = creator.kick_display_name || slug;
+    const pic      = creator.kick_profile_pic  ||
+                     'https://ui-avatars.com/api/?name=' + encodeURIComponent(slug) + '&background=1a1a1a&color=53fc18&size=80';
+    const followers = creator.follower_count;
+    const kickUrl  = 'https://kick.com/' + slug;
+    const joined   = new Date(creator.created_at).toLocaleDateString('en-GB', { year:'numeric', month:'short', day:'numeric' });
+    const fallback = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(slug) + '&background=1a1a1a&color=53fc18&size=80';
+
+    return '<a href="' + kickUrl + '" target="_blank" rel="noopener" class="supporter-card">'
+      + '<img class="supporter-avatar" src="' + pic + '" alt="' + name + '" onerror="this.src=\'' + fallback + '\'" />'
+      + '<div class="supporter-info">'
+      + '<div class="supporter-name">' + name + '</div>'
+      + '<div class="supporter-slug">@' + slug + '</div>'
+      + (followers ? '<div class="supporter-followers">' + formatFollowers(followers) + ' followers</div>' : '')
+      + '</div>'
+      + '<div class="supporter-kick-badge"><span>View on Kick &#8599;</span></div>'
+      + '<div class="supporter-joined">Joined ' + joined + '</div>'
+      + '</a>';
+  }
+
+  async function loadSupporters() {
+    if (typeof SUPABASE_URL === 'undefined' || SUPABASE_URL === 'YOUR_SUPABASE_URL_HERE') {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('configWarning').style.display = 'block';
+      return;
+    }
+
+    let data;
+    try {
+      const res = await fetch(
+        SUPABASE_URL + '/rest/v1/expressions_of_interest?select=*&order=created_at.asc',
+        { headers: sbHeaders() }
+      );
+      data = await res.json();
+    } catch (e) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('loadingState').style.display = 'none';
+
+    if (!Array.isArray(data) || data.length === 0) {
+      document.getElementById('emptyState').style.display = 'block';
+      return;
+    }
+
+    const totalFollowers = data.reduce(function(acc, c) { return acc + (c.follower_count || 0); }, 0);
+    document.getElementById('totalCount').textContent     = data.length.toLocaleString();
+    document.getElementById('totalFollowers').textContent = formatFollowers(totalFollowers);
+
+    const grid = document.getElementById('supportersGrid');
+    grid.innerHTML = data.map(buildCard).join('');
+    grid.style.display = 'grid';
+  }
+
+  loadSupporters();
+</script>
+
+</body>
+</html>

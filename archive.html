@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IKSU — Archive</title>
+  <meta name="description" content="The full archive of IKSU Kick news, drama, and discourse. All content is satire." />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <style>
+
+    /* ── PAGE HEADER ── */
+    .news-page-header {
+      padding: 3rem 1.5rem 0;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .news-page-header h1 {
+      font-family: 'Oswald', sans-serif;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+    .news-page-header h1 em { font-style: normal; color: var(--green); }
+    .news-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.5rem 0 0;
+    }
+
+    /* ── POSTS SECTION ── */
+    .news-section {
+      padding: 2.5rem 1.5rem 5rem;
+    }
+    .news-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ── POSTS GRID ── */
+    .news-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 820px) {
+      .news-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 540px) {
+      .news-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── POST CARD ── */
+    .post-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      transition: border-color 0.2s, transform 0.2s;
+      text-decoration: none;
+    }
+    .post-card:hover {
+      border-color: rgba(83,252,24,0.35);
+      transform: translateY(-2px);
+    }
+    .post-card.featured {
+      grid-column: 1 / -1;
+      padding: 2rem;
+      flex-direction: row;
+      gap: 2rem;
+      align-items: flex-start;
+    }
+    .post-card.featured .featured-left { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; }
+    .post-card.featured .post-excerpt { display: block; }
+    @media (max-width: 640px) {
+      .post-card.featured { flex-direction: column; gap: 1rem; }
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+    }
+    .post-badge {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.15rem 0.55rem;
+      border-radius: 2px;
+    }
+    .badge-breaking  { background: #c0392b; color: #fff; }
+    .badge-live      { background: var(--green); color: #000; }
+    .badge-exclusive { background: #8e44ad; color: #fff; }
+    .badge-analysis  { background: #2980b9; color: #fff; }
+    .badge-opinion   { background: #d35400; color: #fff; }
+    .badge-live::before { content: '● '; animation: blink 1s step-start infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .post-category {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--green);
+    }
+    .post-time {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      opacity: 0.55;
+      margin-left: auto;
+    }
+    .post-headline {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      line-height: 1.25;
+      color: var(--text);
+    }
+    .post-card.featured .post-headline { font-size: 1.45rem; }
+    .post-excerpt {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      display: none;
+    }
+    .post-byline {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      opacity: 0.5;
+      margin-top: auto;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .post-byline span { color: var(--green); opacity: 1; }
+
+    .read-more-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-top: 0.25rem;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 5rem 1.5rem;
+      color: var(--text-muted);
+    }
+    .empty-state h2 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+    .empty-state p { font-size: 0.88rem; opacity: 0.6; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 500;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem 4rem;
+      overflow-y: auto;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { display: flex; animation: fadeOverlay 0.2s ease; }
+    @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal-panel {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--green);
+      border-radius: 8px;
+      width: 100%;
+      max-width: 740px;
+      position: relative;
+      animation: slideUp 0.2s ease;
+    }
+    @keyframes slideUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 32px; height: 32px;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s, border-color 0.2s;
+      z-index: 10;
+    }
+    .modal-close:hover { color: var(--text); border-color: var(--green); }
+
+    .modal-header {
+      padding: 2rem 2rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header .post-meta { margin-bottom: 0.85rem; }
+    .modal-headline {
+      font-family: 'Oswald', sans-serif;
+      font-size: clamp(1.3rem, 3vw, 1.9rem);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+      color: var(--text);
+      margin-bottom: 0.85rem;
+    }
+    .modal-byline {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      opacity: 0.55;
+    }
+    .modal-byline span { color: var(--green); opacity: 1; }
+
+    .modal-body {
+      padding: 1.75rem 2rem 2rem;
+      display: flex; flex-direction: column; gap: 1.5rem;
+    }
+    .body-text { font-size: 1rem; color: var(--text-muted); line-height: 1.8; }
+    .body-tweet { display: flex; justify-content: center; }
+    .body-tweet .twitter-tweet { margin: 0 auto; }
+    .body-kick { border-radius: 6px; overflow: hidden; background: #000; aspect-ratio: 16/9; }
+    .body-kick iframe { width: 100%; height: 100%; border: none; display: block; }
+
+    .satire-note {
+      font-size: 0.75rem; color: var(--text-muted); opacity: 0.4;
+      text-align: center; font-style: italic;
+      border-top: 1px solid var(--border); padding-top: 1.25rem;
+    }
+
+    @media (max-width: 600px) {
+      .modal-header { padding: 1.5rem 1.25rem 1.25rem; }
+      .modal-body   { padding: 1.25rem; }
+    }
+
+    /* ── NAV ── */
+    .nav-links-right {
+      display: flex; align-items: center; gap: 1.5rem;
+    }
+    .nav-links-right a {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links-right a:hover,
+    .nav-links-right a.active { color: var(--green); }
+
+    /* ── FOOTER ── */
+    .cs-footer-bar {
+      background: #050505;
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+    .cs-footer-bar-inner {
+      max-width: 700px; margin: 0 auto;
+      display: flex; flex-direction: column; align-items: center; gap: 0.75rem;
+    }
+    .cs-footer-bar img { width: 44px; opacity: 0.5; }
+    .cs-footer-bar p { font-size: 0.78rem; color: var(--text-muted); opacity: 0.45; }
+
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="index.html">
+    <img src="logo.png" alt="IKSU Logo" />
+    <span>IKSU</span>
+  </a>
+  <div class="nav-links-right">
+    <a href="index.html">Home</a>
+    <a href="archive.html" class="active">Archive</a>
+  </div>
+</nav>
+
+<!-- Page header -->
+<div class="news-page-header">
+  <h1>Story <em>Archive</em></h1>
+  <p style="display:flex;align-items:center;gap:0.6rem;margin-top:0.4rem;">
+    <span style="font-family:'Oswald',sans-serif;font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;background:var(--green);color:#000;padding:0.15rem 0.5rem;border-radius:2px;font-weight:700;">IKSU</span>
+    <span style="font-size:0.82rem;color:var(--text-muted);font-style:italic;opacity:0.6;">All content is satire &mdash; for entertainment purposes only</span>
+  </p>
+  <div class="news-divider"></div>
+</div>
+
+<!-- Posts -->
+<section class="news-section">
+  <div class="news-inner">
+    <div id="news-grid" class="news-grid"></div>
+  </div>
+</section>
+
+<!-- Footer -->
+<div class="cs-footer-bar">
+  <div class="cs-footer-bar-inner">
+    <img src="logo.png" alt="IKSU" />
+    <p>International Kick Streamers Union &mdash; Not affiliated with Kick.com &mdash; All content is satire</p>
+  </div>
+</div>
+
+<!-- Full-post modal -->
+<div id="modal-overlay" class="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal-panel">
+    <button class="modal-close" onclick="closeModal()" title="Close">✕</button>
+    <div class="modal-header" id="modal-header"></div>
+    <div class="modal-body"  id="modal-body"></div>
+  </div>
+</div>
+
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<script>
+
+  let allPosts = [];
+
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function relativeTime(ts) {
+    const diff = Date.now() - ts;
+    const mins = Math.floor(diff/60000), hours = Math.floor(diff/3600000), days = Math.floor(diff/86400000);
+    if (mins  <  1) return 'Just now';
+    if (mins  < 60) return `${mins}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days  <  7) return `${days}d ago`;
+    return new Date(ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  }
+
+  function badgeClass(badge) {
+    return {breaking:'badge-breaking',live:'badge-live',exclusive:'badge-exclusive',analysis:'badge-analysis',opinion:'badge-opinion'}[badge]||'badge-breaking';
+  }
+
+  function excerpt(post, maxLen=160) {
+    const tb = (post.blocks||[]).find(b=>b.type==='text');
+    if (!tb||!tb.content) return '';
+    const t = tb.content.trim();
+    return t.length>maxLen ? t.slice(0,maxLen).trimEnd()+'…' : t;
+  }
+
+  function renderGrid(posts) {
+    const grid = document.getElementById('news-grid');
+
+    if (!posts.length) {
+      grid.outerHTML = `
+        <div class="empty-state">
+          <h2>No stories yet</h2>
+          <p>Check back soon — our reporters are tirelessly covering the drama.</p>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = posts.map((post, idx) => {
+      const featured = idx === 0 && posts.length > 1;
+      const ex = excerpt(post);
+      const cardClass = featured ? 'post-card featured' : 'post-card';
+      const hasBlocks = (post.blocks||[]).some(b=>b.type==='tweet'||b.type==='kick');
+      const embedTag = hasBlocks
+        ? `<span style="font-size:0.68rem;color:var(--text-muted);opacity:0.5;">📎 Includes media</span>`
+        : '';
+
+      if (featured) {
+        return `
+        <article class="${cardClass}" onclick="openModal('${post.id}')">
+          <div class="featured-left">
+            <div class="post-meta">
+              <span class="post-badge ${badgeClass(post.badge)}">${esc(post.badge)}</span>
+              <span class="post-category">${esc(post.category)}</span>
+              <span class="post-time">${relativeTime(post.timestamp)}</span>
+            </div>
+            <h2 class="post-headline">${esc(post.title)}</h2>
+            ${ex ? `<p class="post-excerpt">${esc(ex)}</p>` : ''}
+            <div class="read-more-tag">Read story →</div>
+            <div class="post-byline">By <span>${esc(post.byline||'IKSU Staff')}</span> &mdash; IKSU</div>
+          </div>
+          <div style="align-self:center;">${embedTag}</div>
+        </article>`;
+      }
+
+      return `
+      <article class="${cardClass}" onclick="openModal('${post.id}')">
+        <div class="post-meta">
+          <span class="post-badge ${badgeClass(post.badge)}">${esc(post.badge)}</span>
+          <span class="post-category">${esc(post.category)}</span>
+          <span class="post-time">${relativeTime(post.timestamp)}</span>
+        </div>
+        <h2 class="post-headline">${esc(post.title)}</h2>
+        ${embedTag}
+        <div class="post-byline">By <span>${esc(post.byline||'IKSU Staff')}</span> &mdash; IKSU</div>
+      </article>`;
+    }).join('');
+  }
+
+  function openModal(id) {
+    const post = allPosts.find(p=>p.id===id);
+    if (!post) return;
+
+    document.getElementById('modal-header').innerHTML = `
+      <div class="post-meta">
+        <span class="post-badge ${badgeClass(post.badge)}">${esc(post.badge)}</span>
+        <span class="post-category">${esc(post.category)}</span>
+        <span class="post-time">${relativeTime(post.timestamp)}</span>
+      </div>
+      <h2 class="modal-headline">${esc(post.title)}</h2>
+      <div class="modal-byline">By <span>${esc(post.byline||'IKSU Staff')}</span> &mdash; IKSU Newsroom</div>
+    `;
+
+    const bodyEl = document.getElementById('modal-body');
+    const blocks = post.blocks||[];
+
+    if (!blocks.length) {
+      bodyEl.innerHTML = '<p class="body-text" style="opacity:0.4;font-style:italic;">No content available.</p>';
+    } else {
+      bodyEl.innerHTML = blocks.map(block => {
+        if (block.type==='text') {
+          return (block.content||'').split(/\n\n+/).filter(p=>p.trim())
+            .map(p=>`<p class="body-text">${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
+        }
+        if (block.type==='tweet'&&block.tweetId) {
+          return `<div class="body-tweet"><blockquote class="twitter-tweet" data-theme="dark"><a href="${esc(block.tweetUrl)}"></a></blockquote></div>`;
+        }
+        if (block.type==='kick'&&block.clipSlug) {
+          return `<div class="body-kick"><iframe src="https://kick.com/video/${esc(block.clipSlug)}?nochat=1" allowfullscreen allow="autoplay; encrypted-media"></iframe></div>`;
+        }
+        return '';
+      }).join('');
+    }
+
+    bodyEl.insertAdjacentHTML('beforeend','<p class="satire-note">All IKSU content is satire — for entertainment purposes only. Not affiliated with Kick.com.</p>');
+
+    if (window.twttr&&window.twttr.widgets) window.twttr.widgets.load(bodyEl);
+    else window.addEventListener('load',()=>{ if(window.twttr&&window.twttr.widgets) window.twttr.widgets.load(bodyEl); },{once:true});
+
+    document.getElementById('modal-overlay').classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.body.style.overflow='';
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target===document.getElementById('modal-overlay')) closeModal();
+  }
+
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+  async function loadPosts() {
+    try {
+      const res = await fetch('posts.json?v='+Date.now());
+      if (!res.ok) throw new Error();
+      allPosts = await res.json();
+    } catch { allPosts=[]; }
+    renderGrid(allPosts.filter(p=>p.published));
+  }
+
+  loadPosts();
+
+</script>
+</body>
+</html>

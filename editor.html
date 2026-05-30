@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>if (sessionStorage.getItem('iksu_editor_auth') !== '1') location.replace('login.html');</script>
+  <title>IKSU — Post Editor</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <style>
+
+    .editor-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 6rem;
+    }
+
+    /* ── GITHUB SETTINGS PANEL ── */
+    .gh-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+    .gh-panel-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1.25rem;
+      cursor: pointer;
+      user-select: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s;
+    }
+    .gh-panel-header:hover { border-bottom-color: var(--border); }
+    .gh-panel-header.open { border-bottom-color: var(--border); }
+    .gh-status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .gh-status-dot.ok  { background: var(--green); box-shadow: 0 0 6px rgba(83,252,24,0.5); }
+    .gh-status-dot.err { background: #e74c3c; }
+    .gh-status-dot.off { background: var(--border); }
+    .gh-panel-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      flex: 1;
+    }
+    .gh-status-text {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+    .gh-chevron {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+    .gh-chevron.open { transform: rotate(180deg); }
+    .gh-panel-body {
+      display: none;
+      padding: 1.25rem;
+      gap: 0.85rem;
+      flex-direction: column;
+    }
+    .gh-panel-body.open { display: flex; }
+    .gh-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .gh-field { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 160px; }
+    .gh-field label {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .gh-field input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'Open Sans', sans-serif;
+      font-size: 0.875rem;
+      padding: 0.5rem 0.75rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .gh-field input:focus { border-color: var(--green); }
+    .gh-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      opacity: 0.5;
+      line-height: 1.6;
+    }
+    .gh-note a { color: var(--green); text-decoration: none; }
+
+    /* ── TITLE INPUT ── */
+    .editor-title-input {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid var(--border);
+      color: var(--text);
+      width: 100%;
+      padding: 0.5rem 0;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 1.5rem;
+    }
+    .editor-title-input:focus { border-bottom-color: var(--green); }
+    .editor-title-input::placeholder { color: var(--text-muted); opacity: 0.35; }
+
+    /* ── META ROW ── */
+    .meta-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .meta-field { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 140px; }
+    .meta-field label {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .meta-field select, .meta-field input {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'Open Sans', sans-serif;
+      font-size: 0.875rem;
+      padding: 0.55rem 0.75rem;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .meta-field select:focus, .meta-field input:focus { border-color: var(--green); }
+    .meta-field select option { background: #111; }
+
+    /* ── BLOCKS ── */
+    .blocks-list { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem; }
+
+    .block-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .block-card:hover { border-color: rgba(83,252,24,0.2); }
+
+    .block-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.75rem;
+      background: var(--bg-card2);
+      border-bottom: 1px solid var(--border);
+      user-select: none;
+    }
+    .block-label {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      flex: 1;
+    }
+    .bbar-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+      transition: color 0.15s, background 0.15s;
+      line-height: 1;
+    }
+    .bbar-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    .bbar-btn.del:hover { color: #e74c3c; background: rgba(231,76,60,0.08); }
+
+    .block-body { padding: 0.85rem; }
+    .block-body textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: 'Open Sans', sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.75;
+      resize: vertical;
+      min-height: 110px;
+      outline: none;
+    }
+    .block-body textarea::placeholder { color: var(--text-muted); opacity: 0.35; }
+
+    .block-url-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'Open Sans', sans-serif;
+      font-size: 0.875rem;
+      padding: 0.55rem 0.75rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .block-url-input:focus { border-color: var(--green); }
+    .block-url-input::placeholder { color: var(--text-muted); opacity: 0.35; }
+
+    .embed-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.65rem;
+      background: rgba(83,252,24,0.06);
+      border: 1px solid rgba(83,252,24,0.25);
+      border-radius: 4px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.78rem;
+      color: var(--green);
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    .embed-chip-url {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: none;
+      letter-spacing: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 380px;
+    }
+
+    .kick-preview {
+      margin-top: 0.65rem;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #000;
+      aspect-ratio: 16/9;
+      max-height: 260px;
+    }
+    .kick-preview iframe { width: 100%; height: 100%; border: none; display: block; }
+
+    /* ── ADD BLOCK BAR ── */
+    .add-block-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .add-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: transparent;
+      border: 1px dashed var(--border);
+      color: var(--text-muted);
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 0.55rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .add-btn:hover { border-color: var(--green); color: var(--green); }
+
+    /* ── ACTION BAR ── */
+    .action-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      padding: 1.25rem 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 3rem;
+    }
+    .action-bar .spacer { flex: 1; }
+    .gh-required-note {
+      font-size: 0.75rem;
+      color: #e67e22;
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── POSTS LIST ── */
+    .posts-manager { border-top: 1px solid var(--border); padding-top: 2rem; }
+    .posts-manager-header {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .post-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+      transition: border-color 0.2s;
+    }
+    .post-row:hover { border-color: rgba(83,252,24,0.2); }
+    .post-row-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      color: var(--text);
+      flex: 1;
+      min-width: 120px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .post-row-time { font-size: 0.7rem; color: var(--text-muted); opacity: 0.45; flex-shrink: 0; }
+    .status-pill {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.15rem 0.5rem;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .status-published  { background: var(--green); color: #000; }
+    .status-draft      { background: #222; color: var(--text-muted); border: 1px solid var(--border); }
+    .status-unfeatured { background: #2980b9; color: #fff; }
+
+    /* ── LOADING STATE ── */
+    .loading-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+    .mini-spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.7rem 1.25rem;
+      border-radius: 4px;
+      z-index: 9999;
+      animation: toastIn 0.2s ease;
+    }
+    .toast.ok  { background: var(--green); color: #000; box-shadow: 0 4px 20px rgba(83,252,24,0.3); }
+    .toast.err { background: #e74c3c; color: #fff; }
+    .toast.inf { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); }
+    @keyframes toastIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+
+    /* nav */
+    .nav-editor-tag {
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--green);
+      border: 1px solid rgba(83,252,24,0.3);
+      padding: 0.2rem 0.6rem;
+      border-radius: 2px;
+    }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+
+    @media (max-width: 600px) {
+      .editor-title-input { font-size: 1.3rem; }
+      .action-bar { flex-direction: column; align-items: stretch; }
+      .action-bar .spacer { display: none; }
+    }
+
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="index.html">
+    <img src="logo.png" alt="IKSU Logo" />
+    <span>IKSU</span>
+  </a>
+  <div class="nav-right">
+    <span id="gh-nav-status" class="nav-editor-tag">Editor</span>
+    <a href="archive.html" class="btn btn-outline" style="font-size:0.75rem;padding:0.4rem 0.85rem;">Archive</a>
+    <button onclick="logout()" class="btn btn-outline" style="font-size:0.75rem;padding:0.4rem 0.85rem;">Log Out</button>
+  </div>
+</nav>
+
+<div class="editor-wrap">
+
+  <!-- GitHub Settings Panel -->
+  <div class="gh-panel">
+    <div class="gh-panel-header" onclick="toggleGhPanel()">
+      <div class="gh-status-dot off" id="gh-dot"></div>
+      <span class="gh-panel-title">GitHub Connection</span>
+      <span class="gh-status-text" id="gh-status-text">Not configured</span>
+      <span class="gh-chevron" id="gh-chevron">▼</span>
+    </div>
+    <div class="gh-panel-body" id="gh-panel-body">
+      <div class="gh-row">
+        <div class="gh-field">
+          <label>GitHub Username / Org</label>
+          <input id="gh-owner" type="text" placeholder="e.g. hayden-young" autocomplete="off" />
+        </div>
+        <div class="gh-field">
+          <label>Repository Name</label>
+          <input id="gh-repo" type="text" placeholder="e.g. kick-union-website" autocomplete="off" />
+        </div>
+        <div class="gh-field" style="max-width:120px;">
+          <label>Branch</label>
+          <input id="gh-branch" type="text" placeholder="main" autocomplete="off" />
+        </div>
+      </div>
+      <div class="gh-field">
+        <label>Personal Access Token</label>
+        <input id="gh-token" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
+      </div>
+      <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-primary" style="font-size:0.8rem;padding:0.55rem 1.2rem;" onclick="saveGhConfig()">Save &amp; Connect</button>
+        <button class="btn btn-outline" style="font-size:0.8rem;padding:0.55rem 1.2rem;" onclick="testGhConfig()">Test Connection</button>
+        <span class="gh-note">Token needs <strong>Contents: Read &amp; Write</strong> permission. <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">Generate one here →</a></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Headline -->
+  <input
+    id="post-title"
+    class="editor-title-input"
+    type="text"
+    placeholder="Post Headline…"
+    autocomplete="off"
+    spellcheck="true"
+  />
+
+  <!-- Metadata -->
+  <div class="meta-row">
+    <div class="meta-field">
+      <label>Badge</label>
+      <select id="post-badge">
+        <option value="breaking">Breaking</option>
+        <option value="live">Live</option>
+        <option value="exclusive">Exclusive</option>
+        <option value="analysis">Analysis</option>
+        <option value="opinion">Opinion</option>
+      </select>
+    </div>
+    <div class="meta-field">
+      <label>Category</label>
+      <input id="post-category" type="text" placeholder="e.g. Streamer Drama" />
+    </div>
+    <div class="meta-field">
+      <label>Byline</label>
+      <input id="post-byline" type="text" placeholder="e.g. Staff Reporter" />
+    </div>
+  </div>
+
+  <!-- Blocks -->
+  <span style="font-family:'Oswald',sans-serif;font-size:0.65rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.6rem;display:block;">Post Body</span>
+  <div id="blocks-list" class="blocks-list"></div>
+
+  <div class="add-block-bar">
+    <button class="add-btn" onclick="addBlock('text')">
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="2.5" rx="1.25"/><rect x="1" y="6.75" width="11" height="2.5" rx="1.25"/><rect x="1" y="11.5" width="8" height="2.5" rx="1.25"/></svg>
+      Add Text
+    </button>
+    <button class="add-btn" onclick="addBlock('tweet')">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      Embed Tweet / X Post
+    </button>
+    <button class="add-btn" onclick="addBlock('kick')">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+      Embed Kick Clip
+    </button>
+  </div>
+
+  <!-- Actions -->
+  <div class="action-bar">
+    <button class="btn btn-outline" onclick="saveDraft()">Save Draft</button>
+    <button class="btn btn-primary" onclick="publishPost()" id="publish-btn">Publish to GitHub</button>
+    <div class="spacer"></div>
+    <button class="btn btn-outline" onclick="newPost()">New Post</button>
+  </div>
+
+  <!-- Posts Manager -->
+  <div class="posts-manager">
+    <div class="posts-manager-header">
+      All Posts
+      <button class="bbar-btn" onclick="loadPostsList()" title="Refresh from GitHub" style="font-size:0.8rem;">↻ Refresh</button>
+    </div>
+    <div id="posts-list-container"></div>
+  </div>
+
+</div>
+
+<div class="cs-footer-bar">
+  <div class="cs-footer-bar-inner">
+    <img src="logo.png" alt="IKSU" />
+    <p>IKSU Editor &mdash; Posts published directly to GitHub</p>
+  </div>
+</div>
+
+<script>
+
+  /* ── AUTH ── */
+  function logout() {
+    sessionStorage.removeItem('iksu_editor_auth');
+    location.replace('login.html');
+  }
+
+  /* ── UTILITIES ── */
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatDate(ts) {
+    return new Date(ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  }
+
+  function toast(msg, type='ok') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), type === 'err' ? 4000 : 2800);
+  }
+
+  /* ── BASE64 (UTF-8 safe) ── */
+  function b64encode(str) {
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    return btoa(binary);
+  }
+
+  function b64decode(str) {
+    const clean = str.replace(/\s/g, '');
+    const binary = atob(clean);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  /* ── GITHUB CONFIG ── */
+  function getGhConfig() {
+    return {
+      token:  localStorage.getItem('iksu_gh_token')  || '',
+      owner:  localStorage.getItem('iksu_gh_owner')  || '',
+      repo:   localStorage.getItem('iksu_gh_repo')   || '',
+      branch: localStorage.getItem('iksu_gh_branch') || 'main',
+    };
+  }
+
+  function isGhConfigured() {
+    const c = getGhConfig();
+    return !!(c.token && c.owner && c.repo);
+  }
+
+  function saveGhConfig() {
+    const token  = document.getElementById('gh-token').value.trim();
+    const owner  = document.getElementById('gh-owner').value.trim();
+    const repo   = document.getElementById('gh-repo').value.trim();
+    const branch = document.getElementById('gh-branch').value.trim() || 'main';
+    if (!token || !owner || !repo) { toast('Fill in all three GitHub fields.', 'err'); return; }
+    localStorage.setItem('iksu_gh_token',  token);
+    localStorage.setItem('iksu_gh_owner',  owner);
+    localStorage.setItem('iksu_gh_repo',   repo);
+    localStorage.setItem('iksu_gh_branch', branch);
+    updateGhStatus();
+    toast('GitHub settings saved.');
+    loadPostsList();
+  }
+
+  async function testGhConfig() {
+    if (!isGhConfigured()) { toast('Save your settings first.', 'err'); return; }
+    toast('Testing connection…', 'inf');
+    try {
+      await ghFetch();
+      toast('Connected to GitHub successfully.');
+      updateGhStatus(true);
+    } catch (e) {
+      toast('Connection failed: ' + e.message, 'err');
+      updateGhStatus(false);
+    }
+  }
+
+  function updateGhStatus(ok) {
+    const dot  = document.getElementById('gh-dot');
+    const text = document.getElementById('gh-status-text');
+    const navTag = document.getElementById('gh-nav-status');
+    if (!isGhConfigured()) {
+      dot.className = 'gh-status-dot off';
+      text.textContent = 'Not configured — posts won\'t sync across devices';
+      navTag.textContent = 'Editor';
+      navTag.style.color = '';
+    } else if (ok === false) {
+      dot.className = 'gh-status-dot err';
+      text.textContent = 'Connection error — check your token';
+      navTag.textContent = 'Editor';
+    } else {
+      const c = getGhConfig();
+      dot.className = 'gh-status-dot ok';
+      text.textContent = `${c.owner}/${c.repo} (${c.branch})`;
+      navTag.textContent = '● GitHub';
+    }
+  }
+
+  function toggleGhPanel() {
+    const body    = document.getElementById('gh-panel-body');
+    const chevron = document.getElementById('gh-chevron');
+    const header  = document.querySelector('.gh-panel-header');
+    const open = body.classList.toggle('open');
+    chevron.classList.toggle('open', open);
+    header.classList.toggle('open', open);
+  }
+
+  function populateGhInputs() {
+    const c = getGhConfig();
+    document.getElementById('gh-owner').value  = c.owner;
+    document.getElementById('gh-repo').value   = c.repo;
+    document.getElementById('gh-branch').value = c.branch;
+    document.getElementById('gh-token').value  = c.token;
+  }
+
+  /* ── GITHUB API ── */
+  async function ghFetch() {
+    const c = getGhConfig();
+    const res = await fetch(
+      `https://api.github.com/repos/${c.owner}/${c.repo}/contents/posts.json?ref=${c.branch}`,
+      { headers: { Authorization: `token ${c.token}`, Accept: 'application/vnd.github.v3+json' } }
+    );
+    if (!res.ok) throw new Error(`${res.status} — check your token/repo name`);
+    const data = await res.json();
+    return {
+      posts: JSON.parse(b64decode(data.content)),
+      sha: data.sha
+    };
+  }
+
+  async function ghPush(posts, sha, message) {
+    const c = getGhConfig();
+    const res = await fetch(
+      `https://api.github.com/repos/${c.owner}/${c.repo}/contents/posts.json`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${c.token}`,
+          Accept: 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message,
+          content: b64encode(JSON.stringify(posts, null, 2)),
+          sha,
+          branch: c.branch
+        })
+      }
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      throw new Error(err.message || `GitHub error ${res.status}`);
+    }
+    return res.json();
+  }
+
+  /* ── BLOCK STATE ── */
+  let currentPostId = null;
+  let blocks = [];
+
+  function addBlock(type) {
+    const block = { id: uid(), type };
+    if (type === 'text')  block.content = '';
+    if (type === 'tweet') { block.tweetUrl = ''; block.tweetId = ''; }
+    if (type === 'kick')  { block.clipUrl = ''; block.clipSlug = ''; }
+    blocks.push(block);
+    renderBlocks();
+    const inputs = document.querySelectorAll('#blocks-list textarea, #blocks-list .block-url-input');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  }
+
+  function removeBlock(id) {
+    blocks = blocks.filter(b => b.id !== id);
+    renderBlocks();
+  }
+
+  function moveBlock(id, dir) {
+    const i = blocks.findIndex(b => b.id === id);
+    const j = i + dir;
+    if (j < 0 || j >= blocks.length) return;
+    [blocks[i], blocks[j]] = [blocks[j], blocks[i]];
+    renderBlocks();
+  }
+
+  function onTextChange(id, val) {
+    const b = blocks.find(b => b.id === id);
+    if (b) b.content = val;
+  }
+
+  function onTweetChange(id, url) {
+    const b = blocks.find(b => b.id === id);
+    if (!b) return;
+    b.tweetUrl = url.trim();
+    const m = url.match(/status\/(\d+)/);
+    b.tweetId = m ? m[1] : '';
+    renderBlocks();
+  }
+
+  function onKickChange(id, url) {
+    const b = blocks.find(b => b.id === id);
+    if (!b) return;
+    b.clipUrl = url.trim();
+    const m = url.match(/kick\.com\/(?:video\/|[^/]+\/clips\/)([^/?#]+)/);
+    b.clipSlug = m ? m[1] : '';
+    renderBlocks();
+  }
+
+  function renderBlocks() {
+    const list = document.getElementById('blocks-list');
+    if (!blocks.length) {
+      list.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted);font-size:0.85rem;border:1px dashed var(--border);border-radius:6px;opacity:0.5;">No content yet — add a block below.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    blocks.forEach((block, idx) => {
+      const card = document.createElement('div');
+      card.className = 'block-card';
+      const upBtn   = idx > 0 ? `<button class="bbar-btn" onclick="moveBlock('${block.id}',-1)">↑</button>` : '';
+      const downBtn = idx < blocks.length-1 ? `<button class="bbar-btn" onclick="moveBlock('${block.id}',1)">↓</button>` : '';
+      const delBtn  = `<button class="bbar-btn del" onclick="removeBlock('${block.id}')">✕</button>`;
+
+      let label='', body='';
+
+      if (block.type === 'text') {
+        label = '📝 Text Block';
+        body  = `<textarea
+          placeholder="Write your paragraph here…"
+          onchange="onTextChange('${block.id}',this.value)"
+          oninput="onTextChange('${block.id}',this.value)"
+        >${esc(block.content)}</textarea>`;
+      }
+      if (block.type === 'tweet') {
+        label = '🐦 Tweet / X Post';
+        const chip = block.tweetId
+          ? `<div class="embed-chip">✓ Tweet linked &nbsp;<span class="embed-chip-url">${esc(block.tweetUrl)}</span></div>` : '';
+        body = `<input class="block-url-input" type="url"
+          placeholder="Paste tweet URL — e.g. https://x.com/user/status/12345…"
+          value="${esc(block.tweetUrl)}"
+          onchange="onTweetChange('${block.id}',this.value)"
+          onblur="onTweetChange('${block.id}',this.value)"
+        />${chip}`;
+      }
+      if (block.type === 'kick') {
+        label = '🎮 Kick Clip';
+        const preview = block.clipSlug
+          ? `<div class="kick-preview"><iframe src="https://kick.com/video/${esc(block.clipSlug)}?nochat=1" allowfullscreen allow="autoplay; encrypted-media"></iframe></div>` : '';
+        body = `<input class="block-url-input" type="url"
+          placeholder="Paste Kick clip URL — e.g. https://kick.com/video/clip-slug"
+          value="${esc(block.clipUrl)}"
+          onchange="onKickChange('${block.id}',this.value)"
+          onblur="onKickChange('${block.id}',this.value)"
+        />${preview}`;
+      }
+
+      card.innerHTML = `
+        <div class="block-bar">
+          <span class="block-label">${label}</span>
+          ${upBtn}${downBtn}${delBtn}
+        </div>
+        <div class="block-body">${body}</div>`;
+      list.appendChild(card);
+    });
+  }
+
+  /* ── BUILD POST ── */
+  function buildPost(published, featured) {
+    // sync textarea values
+    document.querySelectorAll('#blocks-list textarea').forEach(ta => {
+      const cards = [...document.querySelectorAll('#blocks-list .block-card')];
+      const idx = cards.indexOf(ta.closest('.block-card'));
+      if (idx >= 0 && blocks[idx]?.type === 'text') blocks[idx].content = ta.value;
+    });
+    return {
+      id:        currentPostId || uid(),
+      title:     document.getElementById('post-title').value.trim(),
+      badge:     document.getElementById('post-badge').value,
+      category:  document.getElementById('post-category').value.trim(),
+      byline:    document.getElementById('post-byline').value.trim(),
+      timestamp: Date.now(),
+      published,
+      featured:  featured !== undefined ? featured : true,
+      blocks:    JSON.parse(JSON.stringify(blocks)),
+    };
+  }
+
+  /* ── LOCAL DRAFTS ── */
+  function getDrafts() {
+    try { return JSON.parse(localStorage.getItem('iksu_drafts') || '[]'); } catch { return []; }
+  }
+  function saveDrafts(drafts) { localStorage.setItem('iksu_drafts', JSON.stringify(drafts)); }
+
+  function saveDraft() {
+    const post = buildPost(false);
+    if (!post.title) { toast('Add a headline first.', 'err'); return; }
+    currentPostId = post.id;
+    const drafts = getDrafts();
+    const i = drafts.findIndex(d => d.id === post.id);
+    if (i >= 0) drafts[i] = post; else drafts.unshift(post);
+    saveDrafts(drafts);
+    renderPostsList([]);
+    toast('Draft saved locally.');
+  }
+
+  /* ── PUBLISH TO GITHUB ── */
+  async function publishPost() {
+    if (!isGhConfigured()) {
+      toast('Configure GitHub connection first (panel above).', 'err');
+      return;
+    }
+    const post = buildPost(true, true);
+    if (!post.title) { toast('Add a headline first.', 'err'); return; }
+
+    const btn = document.getElementById('publish-btn');
+    btn.disabled = true;
+    btn.textContent = 'Publishing…';
+
+    try {
+      const { posts, sha } = await ghFetch();
+      currentPostId = post.id;
+      const i = posts.findIndex(p => p.id === post.id);
+      if (i >= 0) posts[i] = post; else posts.unshift(post);
+
+      await ghPush(posts, sha, `Post: ${post.title}`);
+
+      // Remove from local drafts if it was there
+      saveDrafts(getDrafts().filter(d => d.id !== post.id));
+
+      toast('Published! Cloudflare Pages is deploying…');
+      loadPostsList();
+    } catch (e) {
+      toast('Publish failed: ' + e.message, 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Publish to GitHub';
+    }
+  }
+
+  /* ── LOAD / NEW / ACTIONS ── */
+  function loadPost(post) {
+    currentPostId = post.id;
+    document.getElementById('post-title').value    = post.title    || '';
+    document.getElementById('post-badge').value    = post.badge    || 'breaking';
+    document.getElementById('post-category').value = post.category || '';
+    document.getElementById('post-byline').value   = post.byline   || '';
+    blocks = JSON.parse(JSON.stringify(post.blocks || []));
+    renderBlocks();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function newPost() {
+    currentPostId = null;
+    document.getElementById('post-title').value    = '';
+    document.getElementById('post-badge').value    = 'breaking';
+    document.getElementById('post-category').value = '';
+    document.getElementById('post-byline').value   = '';
+    blocks = [];
+    renderBlocks();
+    document.getElementById('post-title').focus();
+  }
+
+  async function removeFromHomepage(id) {
+    if (!isGhConfigured()) { toast('GitHub not configured.', 'err'); return; }
+    try {
+      const { posts, sha } = await ghFetch();
+      const p = posts.find(p => p.id === id);
+      if (!p) { toast('Post not found.', 'err'); return; }
+      p.featured = false;
+      await ghPush(posts, sha, `Unfeature: ${p.title}`);
+      toast('Removed from homepage. Still in archive.');
+      loadPostsList();
+    } catch (e) { toast('Failed: ' + e.message, 'err'); }
+  }
+
+  async function deletePost(id, title) {
+    if (!confirm(`Delete "${title}" from the archive entirely? This cannot be undone.`)) return;
+    if (!isGhConfigured()) { toast('GitHub not configured.', 'err'); return; }
+    try {
+      const { posts, sha } = await ghFetch();
+      const filtered = posts.filter(p => p.id !== id);
+      await ghPush(filtered, sha, `Delete post: ${title}`);
+      if (currentPostId === id) newPost();
+      toast('Post deleted from archive.');
+      loadPostsList();
+    } catch (e) { toast('Failed: ' + e.message, 'err'); }
+  }
+
+  function deleteDraft(id) {
+    saveDrafts(getDrafts().filter(d => d.id !== id));
+    if (currentPostId === id) newPost();
+    renderPostsList([]);
+    toast('Draft deleted.');
+  }
+
+  /* ── POSTS LIST ── */
+  async function loadPostsList() {
+    const container = document.getElementById('posts-list-container');
+    container.innerHTML = '<div class="loading-row"><div class="mini-spinner"></div>Loading posts from GitHub…</div>';
+
+    let livePosts = [];
+    if (isGhConfigured()) {
+      try {
+        const { posts } = await ghFetch();
+        livePosts = posts;
+        updateGhStatus(true);
+      } catch (e) {
+        updateGhStatus(false);
+        container.innerHTML = `<p style="color:#e74c3c;font-size:0.82rem;padding:0.5rem 0;">Could not load from GitHub: ${esc(e.message)}</p>`;
+      }
+    }
+
+    renderPostsList(livePosts);
+  }
+
+  function renderPostsList(livePosts) {
+    const container = document.getElementById('posts-list-container');
+    const drafts = getDrafts();
+
+    if (!livePosts.length && !drafts.length) {
+      container.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem 0;opacity:0.5;">No posts yet. Write something above and publish it.</p>';
+      return;
+    }
+
+    let html = '';
+
+    if (livePosts.length) {
+      html += `<div style="font-family:'Oswald',sans-serif;font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.5rem;opacity:0.6;">Published on GitHub</div>`;
+      html += livePosts.map(p => {
+        const isFeatured = p.featured !== false;
+        return `
+        <div class="post-row">
+          <span class="post-row-title">${esc(p.title||'(Untitled)')}</span>
+          <span class="post-row-time">${formatDate(p.timestamp)}</span>
+          <span class="status-pill ${isFeatured ? 'status-published' : 'status-unfeatured'}">${isFeatured ? 'Homepage + Archive' : 'Archive only'}</span>
+          <button class="bbar-btn" onclick='loadPost(${JSON.stringify(p)})'>Edit</button>
+          ${isFeatured
+            ? `<button class="bbar-btn" onclick="removeFromHomepage('${p.id}')" title="Remove from homepage, keep in archive">Remove from Homepage</button>`
+            : `<button class="bbar-btn" onclick="addBackToHomepage('${p.id}')" title="Re-add to homepage">Add to Homepage</button>`
+          }
+          <button class="bbar-btn del" onclick="deletePost('${p.id}',${JSON.stringify(p.title||'')})" title="Delete from archive entirely">Delete</button>
+        </div>`;
+      }).join('');
+    }
+
+    if (drafts.length) {
+      html += `<div style="font-family:'Oswald',sans-serif;font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);margin:1rem 0 0.5rem;opacity:0.6;">Local Drafts (this device only)</div>`;
+      html += drafts.map(p => `
+        <div class="post-row">
+          <span class="post-row-title">${esc(p.title||'(Untitled)')}</span>
+          <span class="post-row-time">${formatDate(p.timestamp)}</span>
+          <span class="status-pill status-draft">Draft</span>
+          <button class="bbar-btn" onclick='loadPost(${JSON.stringify(p)})'>Edit</button>
+          <button class="bbar-btn del" onclick="deleteDraft('${p.id}')">Delete</button>
+        </div>`).join('');
+    }
+
+    container.innerHTML = html;
+  }
+
+  async function addBackToHomepage(id) {
+    if (!isGhConfigured()) { toast('GitHub not configured.', 'err'); return; }
+    try {
+      const { posts, sha } = await ghFetch();
+      const p = posts.find(p => p.id === id);
+      if (!p) return;
+      p.featured = true;
+      await ghPush(posts, sha, `Feature: ${p.title}`);
+      toast('Post added back to homepage.');
+      loadPostsList();
+    } catch (e) { toast('Failed: ' + e.message, 'err'); }
+  }
+
+  /* ── INIT ── */
+  populateGhInputs();
+  updateGhStatus();
+  renderBlocks();
+
+  if (isGhConfigured()) {
+    loadPostsList();
+  } else {
+    renderPostsList([]);
+    toggleGhPanel(); // auto-open settings if not configured
+  }
+
+</script>
+</body>
+</html>

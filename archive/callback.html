@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verifying your Kick account… | IKSU</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <script src="config.js"></script>
+</head>
+<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:1.5rem;padding:2rem;text-align:center;">
+
+  <img src="logo.png" alt="IKSU" style="width:80px;opacity:0.85;filter:drop-shadow(0 0 12px rgba(83,252,24,0.3));" />
+
+  <div id="statusMsg">
+    <div class="spinner" style="margin:0 auto 1rem;"></div>
+    <p style="color:var(--text-muted);font-size:1rem;">Verifying your Kick account…</p>
+  </div>
+
+  <div id="errorMsg" style="display:none;max-width:480px;">
+    <p style="font-size:2rem;margin-bottom:0.75rem;">⚠️</p>
+    <h2 style="font-family:'Oswald',sans-serif;font-size:1.3rem;text-transform:uppercase;letter-spacing:0.05em;color:#ff5c5c;margin-bottom:0.75rem;">Verification Failed</h2>
+    <p id="errorDetail" style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.5rem;line-height:1.6;"></p>
+    <a href="interest.html" class="btn btn-outline">Try Again</a>
+  </div>
+
+<script>
+// ── PKCE helpers (same as interest.html) ──────────────────────────────────────
+async function sha256base64url(plain) {
+  const data = new TextEncoder().encode(plain);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function showError(msg) {
+  document.getElementById('statusMsg').style.display = 'none';
+  document.getElementById('errorDetail').textContent = msg;
+  document.getElementById('errorMsg').style.display = 'block';
+}
+
+async function handleCallback() {
+  const params       = new URLSearchParams(window.location.search);
+  const code         = params.get('code');
+  const returnedState = params.get('state');
+  const errorParam   = params.get('error');
+
+  // ── User denied access ──────────────────────────────────────────────────────
+  if (errorParam) {
+    showError(errorParam === 'access_denied'
+      ? 'You cancelled the Kick authorisation. You can try again whenever you\'re ready.'
+      : 'Kick returned an error: ' + errorParam);
+    return;
+  }
+
+  if (!code) {
+    showError('No authorisation code was returned by Kick. Please try again.');
+    return;
+  }
+
+  // ── CSRF state check ────────────────────────────────────────────────────────
+  const storedState = sessionStorage.getItem('kick_oauth_state');
+  if (!storedState || storedState !== returnedState) {
+    showError('Security check failed (state mismatch). Please start the process again.');
+    sessionStorage.removeItem('kick_oauth_state');
+    sessionStorage.removeItem('kick_pkce_verifier');
+    return;
+  }
+
+  const codeVerifier = sessionStorage.getItem('kick_pkce_verifier');
+  if (!codeVerifier) {
+    showError('Session data missing. Please start the process again from the Express Interest page.');
+    return;
+  }
+
+  // Clean up session storage
+  sessionStorage.removeItem('kick_oauth_state');
+  sessionStorage.removeItem('kick_pkce_verifier');
+
+  // ── Exchange code via Cloudflare Worker (keeps client secret server-side) ────
+  let token;
+  try {
+    const tokenRes = await fetch(KICK_TOKEN_WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code:          code,
+        code_verifier: codeVerifier,
+        redirect_uri:  KICK_REDIRECT_URI,
+      }),
+    });
+
+    const raw = await tokenRes.text();
+    if (!tokenRes.ok) {
+      throw new Error(`Token exchange failed (${tokenRes.status}): ${raw}`);
+    }
+
+    token = JSON.parse(raw);
+  } catch (err) {
+    showError('Could not exchange the authorisation code with Kick. ' + err.message);
+    return;
+  }
+
+  if (!token.access_token) {
+    showError('Kick did not return an access token. Please try again.');
+    return;
+  }
+
+  if (token._debug) sessionStorage.setItem('iksu_debug', JSON.stringify(token._debug));
+
+  // OAuth succeeded — store verified flag and profile, then redirect
+  sessionStorage.setItem('kick_oauth_verified', 'true');
+  if (token.kick_profile) {
+    sessionStorage.setItem('kick_profile', JSON.stringify(token.kick_profile));
+  }
+  window.location.href = 'interest.html?auth=verified';
+}
+
+handleCallback();
+</script>
+
+</body>
+</html>

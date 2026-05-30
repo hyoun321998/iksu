@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IKSU — Editor Login</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <style>
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+    }
+
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--green);
+      border-radius: 8px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    .login-logo {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 16px rgba(83,252,24,0.4));
+      margin-bottom: 1.25rem;
+    }
+
+    .login-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--green);
+      margin-bottom: 0.25rem;
+    }
+
+    .login-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      opacity: 0.55;
+      margin-bottom: 2rem;
+    }
+
+    .login-group {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .login-group label {
+      display: block;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .login-group input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'Open Sans', sans-serif;
+      font-size: 1rem;
+      padding: 0.7rem 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      letter-spacing: 0.05em;
+    }
+
+    .login-group input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(83,252,24,0.12);
+    }
+
+    .login-group input.error {
+      border-color: #e74c3c;
+      box-shadow: 0 0 0 3px rgba(231,76,60,0.12);
+      animation: shake 0.3s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25%       { transform: translateX(-6px); }
+      75%       { transform: translateX(6px); }
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .login-error {
+      font-size: 0.78rem;
+      color: #e74c3c;
+      text-align: center;
+      min-height: 1.2em;
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .login-footer-note {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      opacity: 0.35;
+      text-align: center;
+      margin-top: 0.5rem;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <img class="login-logo" src="logo.png" alt="IKSU" />
+    <div class="login-title">IKSU Editor</div>
+    <div class="login-sub">Staff access only</div>
+
+    <form id="login-form" onsubmit="handleLogin(event)" autocomplete="off" style="width:100%;">
+      <div class="login-group">
+        <label>Password</label>
+        <input
+          id="pw-input"
+          type="password"
+          placeholder="Enter password"
+          autofocus
+          autocomplete="current-password"
+        />
+      </div>
+      <button type="submit" class="btn btn-primary login-btn">Enter</button>
+      <div class="login-error" id="login-error"></div>
+    </form>
+
+    <div class="login-footer-note">IKSU &mdash; Internal use only</div>
+  </div>
+
+  <script>
+    const CORRECT = 'pepper99';
+    const SESSION_KEY = 'iksu_editor_auth';
+
+    // If already authenticated, go straight to the editor
+    if (sessionStorage.getItem(SESSION_KEY) === '1') {
+      location.replace('editor.html');
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const input = document.getElementById('pw-input');
+      const errorEl = document.getElementById('login-error');
+
+      if (input.value === CORRECT) {
+        sessionStorage.setItem(SESSION_KEY, '1');
+        location.replace('editor.html');
+      } else {
+        input.value = '';
+        input.classList.remove('error');
+        void input.offsetWidth; // restart animation
+        input.classList.add('error');
+        errorEl.textContent = 'Incorrect password.';
+        setTimeout(() => input.classList.remove('error'), 400);
+        input.focus();
+      }
+    }
+  </script>
+
+</body>
+</html>
